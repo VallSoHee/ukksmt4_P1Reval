@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== MODEL KATEGORI ====================
+model Kategori {
+  id          Int      @id @default(autoincrement())
+  nama        String   @unique
+  deskripsi   String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  alat        Alat[]
+
+  @@map("kategori")
+}
+
+// ==================== MODEL ALAT ====================
+model Alat {
+  id          Int      @id @default(autoincrement())
+  kodeAlat    String   @unique
+  nama        String
+  deskripsi   String?
+  stok        Int      @default(1)
+  status      StatusAlat @default(tersedia)
+  kategoriId  Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  kategori    Kategori @relation(fields: [kategoriId], references: [id])
+  peminjaman  Peminjaman[]
+
+  @@map("alat")
+}
+
+// ==================== MODEL PEMINJAMAN ====================
+model Peminjaman {
+  id            Int            @id @default(autoincrement())
+  kodePeminjaman String         @unique
+  userId        Int
+  alatId        Int
+  jumlah        Int            @default(1)
+  tanggalPinjam DateTime       @default(now())
+  tanggalKembali DateTime?
+  status        StatusPeminjaman @default(menunggu)
+  catatan       String?
+  disetujuiOleh Int?
+  disetujuiPada DateTime?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  
+  // Relations
+  user          User           @relation(fields: [userId], references: [id])
+  alat          Alat           @relation(fields: [alatId], references: [id])
+  pengembalian  Pengembalian?
+
+  @@map("peminjaman")
+}
+
+// ==================== MODEL PENGGUNA (User) ====================
+model User {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  email       String   @unique
+  password    String
+  role        Role     @default(peminjam)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  peminjaman  Peminjaman[]
+
+  @@map("users")
+}
+
+// ==================== MODEL PENGEMBALIAN (Opsional) ====================
+model Pengembalian {
+  id              Int            @id @default(autoincrement())
+  peminjamanId    Int            @unique
+  tanggalKembali  DateTime       @default(now())
+  kondisi         String         @default("baik")
+  denda           Int            @default(0)
+  catatan         String?
+  diterimaOleh    Int
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  
+  // Relations
+  peminjaman      Peminjaman     @relation(fields: [peminjamanId], references: [id])
+
+  @@map("pengembalian")
+}
+
+// ==================== ENUMS ====================
+
+enum StatusAlat {
+  tersedia
+  dipinjam
+  rusak
+  perbaikan
+}
+
+enum StatusPeminjaman {
+  menunggu
+  disetujui
+  dipinjam
+  dikembalikan
+  ditolak
+  terlambat
+}
+
+enum Role {
+  admin
+  petugas
+  peminjam
+}
