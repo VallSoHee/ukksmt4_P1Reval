@@ -173,6 +173,7 @@ export default function KategoriPage() {
         onSave={selectedKategori ? handleUpdate : handleCreate}
         kategori={selectedKategori}
         title={selectedKategori ? 'Edit Kategori' : 'Tambah Kategori Baru'}
+        existingNames={kategori.map(k => k.nama)}
       />
 
       {deleteConfirm && (
